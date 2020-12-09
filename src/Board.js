@@ -2,7 +2,6 @@ import Cell from './Cell.js';
 
 function Board(props) {
   const cells = props.cells;
-  const hiddenCells = props.hiddenCells;
   const renderedCells = cells.map((row, rowIndex) => {
     return (
       <tr key={rowIndex}>
@@ -11,8 +10,8 @@ function Board(props) {
             <Cell
               row={rowIndex}
               col={colIndex}
-              content={col}
-              isHidden={hiddenCells[rowIndex][colIndex]}
+              content={col.value}
+              isHidden={cells[rowIndex][colIndex].isHidden}
               onClick={props.onCellClick}
             />
           </td>

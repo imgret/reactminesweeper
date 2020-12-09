@@ -15,7 +15,7 @@ function Cell(props) {
       }}
       onClick={() => handleClick()}
     >
-      {isHidden ? 'H' : content !== 0 ? content : ''}
+      {isHidden ? '' : content !== 0 ? content : ''}
     </div>
   );
 }
