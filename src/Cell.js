@@ -1,5 +1,5 @@
 function Cell(props) {
-  const { cell, onClick } = props;
+  const { cell, onClick, onContextMenu } = props;
 
   const renderCellContent = (cell) => {
     let content;
@@ -36,6 +36,7 @@ function Cell(props) {
         textAlign: 'center',
       }}
       onClick={onClick}
+      onContextMenu={onContextMenu}
     >
       {renderCellContent(cell)}
     </div>
