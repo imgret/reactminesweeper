@@ -8,11 +8,8 @@ function Board(props) {
         {row.map((col, colIndex) => (
           <td key={colIndex}>
             <Cell
-              row={rowIndex}
-              col={colIndex}
-              content={col.value}
-              isHidden={cells[rowIndex][colIndex].isHidden}
-              onClick={props.onCellClick}
+              cell={col}
+              onClick={() => props.onCellClick(rowIndex, colIndex)}
             />
           </td>
         ))}
