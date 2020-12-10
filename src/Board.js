@@ -1,7 +1,8 @@
 import Cell from './Cell.js';
 
 function Board(props) {
-  const cells = props.cells;
+  const {cells, onClick, onContextMenu} = props;
+
   const renderedCells = cells.map((row, rowIndex) => {
     return (
       <tr key={rowIndex}>
@@ -9,7 +10,8 @@ function Board(props) {
           <td key={colIndex}>
             <Cell
               cell={col}
-              onClick={() => props.onCellClick(rowIndex, colIndex)}
+              onClick={onClick(rowIndex, colIndex)}
+              onContextMenu={onContextMenu(rowIndex, colIndex)}
             />
           </td>
         ))}
@@ -17,8 +19,10 @@ function Board(props) {
     );
   });
 
+  const handleContextMenu = (e) => e.preventDefault();
+
   return (
-    <table>
+    <table onContextMenu={handleContextMenu}>
       <tbody>{renderedCells}</tbody>
     </table>
   );
