@@ -8,8 +8,8 @@ function Game() {
   const [cells, setCells] = useState([[]]);
   const [gameResult, setGameResult] = useState('in process');
 
-  const handleSettingsInput = (value, setter) => {
-    let parsedValue = Number.parseInt(value);
+  const handleSettingsInput = (setter) =>  (e) => {
+    let parsedValue = Number.parseInt(e.target.value);
     if (!Number.isNaN(parsedValue) && parsedValue > 0) setter(parsedValue);
   };
 
@@ -102,7 +102,7 @@ function Game() {
       .reduce((accumulator, cell) => accumulator + !cell.isHidden, 0);
   };
 
-  const handleCellClick = (row, col) => {
+  const handleCellLeftClick = (row, col) => (e) => {
     if (gameResult === 'in process') {
       let newCells = JSON.parse(JSON.stringify(cells));
       const cell = newCells[row][col];
@@ -121,6 +121,18 @@ function Game() {
       }
 
       setCells(newCells);
+    }
+  };
+
+  const handleCellRightClick = (row, col) => (e) => {
+    if (gameResult === 'in process') {
+      if (cells[row][col].isHidden) {
+        let newCells = JSON.parse(JSON.stringify(cells));
+        const cell = newCells[row][col];
+        cell.isFlagged = !cell.isFlagged;
+
+        setCells(newCells);
+      }
     }
   };
 
@@ -145,26 +157,30 @@ function Game() {
         Rows:{' '}
         <input
           value={rows}
-          onChange={(e) => handleSettingsInput(e.target.value, setRows)}
+          onChange={handleSettingsInput(setRows)}
         />
       </label>
       <label>
         Columns:{' '}
         <input
           value={cols}
-          onChange={(e) => handleSettingsInput(e.target.value, setCols)}
+          onChange={handleSettingsInput(setCols)}
         />
       </label>
       <label>
         Bombs:{' '}
         <input
           value={bombs}
-          onChange={(e) => handleSettingsInput(e.target.value, setBombs)}
+          onChange={handleSettingsInput(setBombs)}
         />
       </label>
       <button onClick={handleStartButton}>Start</button>
       {renderGameResult()}
-      <Board cells={cells} onCellClick={handleCellClick}></Board>
+      <Board
+        cells={cells}
+        onClick={handleCellLeftClick}
+        onContextMenu={handleCellRightClick}
+      ></Board>
     </div>
   );
 }
