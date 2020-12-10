@@ -1,21 +1,43 @@
 function Cell(props) {
-  const { row, col, content, isHidden, onClick } = props;
-  const handleClick = () => {
-    onClick(row, col);
+  const { cell, onClick } = props;
+
+  const renderCellContent = (cell) => {
+    let content;
+    if (cell.isHidden && cell.isFlagged) {
+      content = '🚩';
+    } else if (!cell.isHidden && cell.value !== 0) {
+      content = cell.value;
+    } else {
+      content = null;
+    }
+    return content;
   };
+
+  const chooseCellColor = (cell) => {
+    let color;
+    if (cell.isHidden) {
+      color = 'lightgrey';
+    } else if (!cell.isHidden && cell.value === 'B') {
+      color = 'darkred';
+    } else {
+      color = 'grey';
+    }
+    return color;
+  };
+
   return (
     <div
       style={{
         width: '30px',
         height: '30px',
-        backgroundColor: isHidden ? 'lightgray' : content === 'B' ? 'darkred' : 'grey',
+        backgroundColor: chooseCellColor(cell),
         border: 'none',
         lineHeight: '30px',
         textAlign: 'center',
       }}
-      onClick={() => handleClick()}
+      onClick={onClick}
     >
-      {isHidden ? '' : content !== 0 ? content : ''}
+      {renderCellContent(cell)}
     </div>
   );
 }
