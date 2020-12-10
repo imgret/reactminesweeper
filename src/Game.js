@@ -6,7 +6,7 @@ function Game() {
   const [cols, setCols] = useState(3);
   const [bombs, setBombs] = useState(1);
   const [cells, setCells] = useState([[]]);
-  const [isGameOver, setIsGameOver] = useState(false);
+  const [gameResult, setGameResult] = useState('in process');
 
   const handleSettingsInput = (value, setter) => {
     let parsedValue = Number.parseInt(value);
@@ -60,7 +60,7 @@ function Game() {
   };
 
   const handleStartButton = () => {
-    setIsGameOver(false);
+    setGameResult('in process');
 
     let newCells = generateEmptyCells();
     newCells = populateCells(newCells);
@@ -96,21 +96,28 @@ function Game() {
     return cells;
   };
 
+  const countOpenedCells = (cells) => {
+    return cells
+      .flat()
+      .reduce((accumulator, cell) => accumulator + cell.isHidden);
+  };
+
   const handleCellClick = (row, col) => {
-    if (!isGameOver) {
+    if (gameResult === 'in process') {
       let newCells = JSON.parse(JSON.stringify(cells));
       const cell = newCells[row][col];
       cell.isHidden = false;
 
-      if (cell.value === 'B') {
-        setIsGameOver(true);
+      const isWin = countOpenedCells(newCells) === rows * cols - bombs;
+      const isLoss = cell.value === 'B';
+
+      if (isLoss) {
+        setGameResult('loss');
         newCells = openBombs(newCells);
+      } else if (isWin) {
+        setGameResult('win');
       } else {
-        newCells = recursivelyOpenAdjacentCells(
-          newCells,
-          row,
-          col
-        );
+        newCells = recursivelyOpenAdjacentCells(newCells, row, col);
       }
 
       setCells(newCells);
@@ -141,11 +148,8 @@ function Game() {
         />
       </label>
       <button onClick={handleStartButton}>Start</button>
-      {isGameOver ? <h3>Game over</h3> : null}
-      <Board
-        cells={cells}
-        onCellClick={handleCellClick}
-      ></Board>
+      {gameResult ? <h3>Game over</h3> : null}
+      <Board cells={cells} onCellClick={handleCellClick}></Board>
     </div>
   );
 }
