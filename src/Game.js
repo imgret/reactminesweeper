@@ -99,7 +99,7 @@ function Game() {
   const countOpenedCells = (cells) => {
     return cells
       .flat()
-      .reduce((accumulator, cell) => accumulator + cell.isHidden);
+      .reduce((accumulator, cell) => accumulator + !cell.isHidden, 0);
   };
 
   const handleCellClick = (row, col) => {
@@ -122,6 +122,21 @@ function Game() {
 
       setCells(newCells);
     }
+  };
+
+  const renderGameResult = () => {
+    let result;
+    switch (gameResult) {
+      case 'loss':
+        result = <h3>You lose</h3>;
+        break;
+      case 'win':
+        result = <h3>You win</h3>;
+        break;
+      default:
+        result = null;
+    }
+    return result;
   };
 
   return (
@@ -148,7 +163,7 @@ function Game() {
         />
       </label>
       <button onClick={handleStartButton}>Start</button>
-      {gameResult ? <h3>Game over</h3> : null}
+      {renderGameResult()}
       <Board cells={cells} onCellClick={handleCellClick}></Board>
     </div>
   );
