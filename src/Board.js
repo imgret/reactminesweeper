@@ -1,7 +1,7 @@
 import Cell from './Cell.js';
 
 function Board(props) {
-  const {cells, onClick, onContextMenu} = props;
+  const { cells, onClick, onContextMenu } = props;
 
   const renderedCells = cells.map((row, rowIndex) => {
     return (

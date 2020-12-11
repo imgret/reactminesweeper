@@ -7,10 +7,11 @@ function Game() {
   const [bombs, setBombs] = useState(1);
   const [cells, setCells] = useState([[]]);
   const [gameResult, setGameResult] = useState('in process');
+  const [error, setError] = useState({ message: '', isHidden: true });
 
-  const handleSettingsInput = (setter) =>  (e) => {
-    let parsedValue = Number.parseInt(e.target.value);
-    if (!Number.isNaN(parsedValue) && parsedValue > 0) setter(parsedValue);
+  const handleSettingsInput = (setter) => (e) => {
+    let value = Number.parseInt(e.target.value);
+    if (Number.isInteger(value) && value > 0) setter(e.target.value);
   };
 
   const createCell = (value = 0, isHidden = true, isFlagged = false) => {
@@ -59,12 +60,27 @@ function Game() {
     return cells;
   };
 
-  const handleStartButton = () => {
-    setGameResult('in process');
+  const resetError = () => {
+    if (error.message !== '' || !error.isHidden) {
+      setError({ message: '', isHidden: true });
+    }
+  }
 
-    let newCells = generateEmptyCells();
-    newCells = populateCells(newCells);
-    setCells(newCells);
+  const handleStartButton = () => {
+    if (bombs > rows * cols) {
+      const error = {
+        message: "Bombs number shouldn't exceed number of board's cells",
+        isHidden: false,
+      };
+      setError(error);
+    } else {
+      resetError();
+      setGameResult('in process');
+
+      let newCells = generateEmptyCells();
+      newCells = populateCells(newCells);
+      setCells(newCells);
+    }
   };
 
   const recursivelyOpenAdjacentCells = (cells, row, col) => {
@@ -75,7 +91,7 @@ function Game() {
         for (let c = -1; c <= 1; c++) {
           if (col + c < 0 || col + c >= cols) continue;
           const adjacentCell = cells[row + r][col + c];
-          if (adjacentCell.isHidden === false) continue;
+          if (!adjacentCell.isHidden) continue;
           adjacentCell.isHidden = false;
           recursivelyOpenAdjacentCells(cells, row + r, col + c);
         }
@@ -105,8 +121,8 @@ function Game() {
   const handleCellLeftClick = (row, col) => (e) => {
     if (gameResult === 'in process') {
       let newCells = JSON.parse(JSON.stringify(cells));
+      newCells = recursivelyOpenAdjacentCells(newCells, row, col);
       const cell = newCells[row][col];
-      cell.isHidden = false;
 
       const isWin = countOpenedCells(newCells) === rows * cols - bombs;
       const isLoss = cell.value === 'B';
@@ -114,10 +130,9 @@ function Game() {
       if (isLoss) {
         setGameResult('loss');
         newCells = openBombs(newCells);
-      } else if (isWin) {
+      }
+      if (isWin) {
         setGameResult('win');
-      } else {
-        newCells = recursivelyOpenAdjacentCells(newCells, row, col);
       }
 
       setCells(newCells);
@@ -136,7 +151,7 @@ function Game() {
     }
   };
 
-  const renderGameResult = () => {
+  const renderGameResultMessage = () => {
     let result;
     switch (gameResult) {
       case 'loss':
@@ -151,31 +166,28 @@ function Game() {
     return result;
   };
 
+  const renderErrorMessage = () => {
+    let errorElement = null;
+    if (!error.isHidden) {
+      errorElement = <h4 style={{color: 'darkred'}}>Error: {error.message}</h4>
+    }
+    return errorElement;
+  };
+
   return (
     <div>
       <label>
-        Rows:{' '}
-        <input
-          value={rows}
-          onChange={handleSettingsInput(setRows)}
-        />
+        Rows: <input value={rows} onChange={handleSettingsInput(setRows)} />
       </label>
       <label>
-        Columns:{' '}
-        <input
-          value={cols}
-          onChange={handleSettingsInput(setCols)}
-        />
+        Columns: <input value={cols} onChange={handleSettingsInput(setCols)} />
       </label>
       <label>
-        Bombs:{' '}
-        <input
-          value={bombs}
-          onChange={handleSettingsInput(setBombs)}
-        />
+        Bombs: <input value={bombs} onChange={handleSettingsInput(setBombs)} />
       </label>
       <button onClick={handleStartButton}>Start</button>
-      {renderGameResult()}
+      {renderGameResultMessage()}
+      {renderErrorMessage()}
       <Board
         cells={cells}
         onClick={handleCellLeftClick}
