@@ -1,17 +1,23 @@
 import { useState } from 'react';
 import Board from './Board.js';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Alert from 'react-bootstrap/Alert';
+import GameSettingsForm from './GameSettingsForm.js';
 
 function Game() {
   const [rows, setRows] = useState(3);
   const [cols, setCols] = useState(3);
   const [bombs, setBombs] = useState(1);
   const [cells, setCells] = useState([[]]);
-  const [gameResult, setGameResult] = useState('in process');
-  const [error, setError] = useState({ message: '', isHidden: true });
+  const [gameStatus, setGameStatus] = useState({
+    status: 'in process',
+    message: '',
+  });
 
   const handleSettingsInput = (setter) => (e) => {
     let value = Number.parseInt(e.target.value);
-    if (Number.isInteger(value) && value > 0) setter(e.target.value);
+    if (Number.isInteger(value) && value > 0) setter(value);
   };
 
   const createCell = (value = 0, isHidden = true, isFlagged = false) => {
@@ -60,26 +66,32 @@ function Game() {
     return cells;
   };
 
-  const resetError = () => {
-    if (error.message !== '' || !error.isHidden) {
-      setError({ message: '', isHidden: true });
+  const resetGame = () => {
+    let newCells = [[]];
+    if (JSON.stringify(cells) !== JSON.stringify(newCells)) {
+      setGameStatus({ status: 'in process', message: '' });
+      setCells(newCells);
     }
-  }
+  };
+
+  const startNewGame = () => {
+    setGameStatus({ status: 'in process', message: '' });
+
+    let newCells = generateEmptyCells();
+    newCells = populateCells(newCells);
+    setCells(newCells);
+  };
 
   const handleStartButton = () => {
     if (bombs > rows * cols) {
-      const error = {
+      const status = {
+        status: 'error',
         message: "Bombs number shouldn't exceed number of board's cells",
-        isHidden: false,
       };
-      setError(error);
+      resetGame();
+      setGameStatus(status);
     } else {
-      resetError();
-      setGameResult('in process');
-
-      let newCells = generateEmptyCells();
-      newCells = populateCells(newCells);
-      setCells(newCells);
+      startNewGame();
     }
   };
 
@@ -119,7 +131,7 @@ function Game() {
   };
 
   const handleCellLeftClick = (row, col) => (e) => {
-    if (gameResult === 'in process') {
+    if (gameStatus.status === 'in process') {
       let newCells = JSON.parse(JSON.stringify(cells));
       newCells = recursivelyOpenAdjacentCells(newCells, row, col);
       const cell = newCells[row][col];
@@ -128,11 +140,11 @@ function Game() {
       const isLoss = cell.value === 'B';
 
       if (isLoss) {
-        setGameResult('loss');
+        setGameStatus({ status: 'loss', message: 'You lose' });
         newCells = openBombs(newCells);
       }
       if (isWin) {
-        setGameResult('win');
+        setGameStatus({ status: 'win', message: 'You win' });
       }
 
       setCells(newCells);
@@ -140,7 +152,7 @@ function Game() {
   };
 
   const handleCellRightClick = (row, col) => (e) => {
-    if (gameResult === 'in process') {
+    if (gameStatus.status === 'in process') {
       if (cells[row][col].isHidden) {
         let newCells = JSON.parse(JSON.stringify(cells));
         const cell = newCells[row][col];
@@ -151,48 +163,39 @@ function Game() {
     }
   };
 
-  const renderGameResultMessage = () => {
-    let result;
-    switch (gameResult) {
-      case 'loss':
-        result = <h3>You lose</h3>;
-        break;
-      case 'win':
-        result = <h3>You win</h3>;
-        break;
-      default:
-        result = null;
-    }
-    return result;
-  };
-
-  const renderErrorMessage = () => {
-    let errorElement = null;
-    if (!error.isHidden) {
-      errorElement = <h4 style={{color: 'darkred'}}>Error: {error.message}</h4>
-    }
-    return errorElement;
+  const renderGameStatus = () => {
+    const variant = gameStatus.status === 'error' ? 'danger' : 'primary';
+    const element = (
+      <Alert variant={variant} className='text-center'>
+        {gameStatus.message}
+      </Alert>
+    );
+    return gameStatus.message === '' ? null : element;
   };
 
   return (
-    <div>
-      <label>
-        Rows: <input value={rows} onChange={handleSettingsInput(setRows)} />
-      </label>
-      <label>
-        Columns: <input value={cols} onChange={handleSettingsInput(setCols)} />
-      </label>
-      <label>
-        Bombs: <input value={bombs} onChange={handleSettingsInput(setBombs)} />
-      </label>
-      <button onClick={handleStartButton}>Start</button>
-      {renderGameResultMessage()}
-      {renderErrorMessage()}
-      <Board
-        cells={cells}
-        onClick={handleCellLeftClick}
-        onContextMenu={handleCellRightClick}
-      ></Board>
+    <div className='mt-3 mx-4 mx-sm-0'>
+      <Container>
+        <Row className='justify-content-center'>
+          <GameSettingsForm
+            values={{ rows, cols, bombs }}
+            events={{
+              rowsChange: handleSettingsInput(setRows),
+              colsChange: handleSettingsInput(setCols),
+              bombsChange: handleSettingsInput(setBombs),
+              startClick: handleStartButton,
+            }}
+            message={renderGameStatus()}
+          />
+        </Row>
+        <Row className='justify-content-center'>
+          <Board
+            cells={cells}
+            onClick={handleCellLeftClick}
+            onContextMenu={handleCellRightClick}
+          />
+        </Row>
+      </Container>
     </div>
   );
 }
